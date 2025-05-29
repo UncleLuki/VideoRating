@@ -6,6 +6,7 @@ class MovieRatingsTooltip {
     this.tooltip = null;
     this.currentTarget = null;
     this.debounceTimer = null;
+    this.hideTooltipTimer = null; // Timer for hiding the tooltip
     
     this.init();
   }
@@ -41,6 +42,17 @@ class MovieRatingsTooltip {
     document.addEventListener('mouseover', this.handleMouseOver.bind(this));
     document.addEventListener('mouseout', this.handleMouseOut.bind(this));
     document.addEventListener('mousemove', this.handleMouseMove.bind(this));
+
+    // Tooltip specific events
+    this.tooltip.addEventListener('mouseenter', () => {
+      clearTimeout(this.hideTooltipTimer); // Clear hide timer when mouse enters tooltip
+    });
+
+    this.tooltip.addEventListener('mouseleave', () => {
+      this.hideTooltip();
+      this.currentTarget = null; // Clear current target
+      clearTimeout(this.debounceTimer); // Clear any pending show-tooltip timer
+    });
     
     // Nasłuchuj wiadomości z popup
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -65,10 +77,17 @@ class MovieRatingsTooltip {
   }
   
   handleMouseOut(event) {
-    if (!event.relatedTarget || !this.tooltip.contains(event.relatedTarget)) {
-      clearTimeout(this.debounceTimer);
-      this.hideTooltip();
-      this.currentTarget = null;
+    // Only act if mouse is leaving the element that triggered the tooltip
+    if (event.target === this.currentTarget) {
+      // If the mouse is not moving towards the tooltip itself
+      if (!event.relatedTarget || !this.tooltip.contains(event.relatedTarget)) {
+        clearTimeout(this.hideTooltipTimer); // Clear any existing timer
+        this.hideTooltipTimer = setTimeout(() => {
+          this.hideTooltip();
+          this.currentTarget = null;
+          clearTimeout(this.debounceTimer); // Clear any pending show-tooltip timer
+        }, 200); // Delay before hiding
+      }
     }
   }
   
