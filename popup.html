@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 300px;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      color: white;
+      margin: 0;
+    }
+    
+    h1 {
+      font-size: 18px;
+      margin: 0 0 16px 0;
+      color: #ffffff;
+      text-align: center;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #cccccc;
+      font-size: 14px;
+    }
+    
+    input[type="text"] {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #444;
+      border-radius: 6px;
+      background: #333;
+      color: white;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #0084ff;
+      box-shadow: 0 0 0 2px rgba(0, 132, 255, 0.2);
+    }
+    
+    button {
+      width: 100%;
+      padding: 10px;
+      background: linear-gradient(135deg, #0084ff 0%, #0066cc 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 132, 255, 0.3);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    .info {
+      background: rgba(0, 132, 255, 0.1);
+      border: 1px solid rgba(0, 132, 255, 0.3);
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #cccccc;
+    }
+    
+    .info a {
+      color: #0084ff;
+      text-decoration: none;
+    }
+    
+    .info a:hover {
+      text-decoration: underline;
+    }
+    
+    .status {
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      text-align: center;
+      margin-top: 12px;
+      display: none;
+    }
+    
+    .status.success {
+      background: rgba(52, 168, 83, 0.2);
+      border: 1px solid rgba(52, 168, 83, 0.4);
+      color: #4CAF50;
+    }
+    
+    .status.error {
+      background: rgba(244, 67, 54, 0.2);
+      border: 1px solid rgba(244, 67, 54, 0.4);
+      color: #f44336;
+    }
+    
+    .status.info {
+      background: rgba(33, 150, 243, 0.2);
+      border: 1px solid rgba(33, 150, 243, 0.4);
+      color: #2196F3;
+    }
+    
+    .features {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 16px;
+    }
+    
+    .features h3 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      color: #ffffff;
+    }
+    
+    .features ul {
+      margin: 0;
+      padding-left: 16px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #cccccc;
+    }
+    
+    .features li {
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎬 Movie Ratings Tooltip</h1>
+  
+  <div class="info">
+    Aby używać rozszerzenia, potrzebujesz klucza API z 
+    <a href="http://www.omdbapi.com/apikey.aspx" target="_blank">OMDB API</a>. 
+    Rejestracja jest darmowa!
+  </div>
+  
+  <form id="settingsForm">
+    <div class="form-group">
+      <label for="apiKey">Klucz API OMDB:</label>
+      <input type="text" id="apiKey" placeholder="Wprowadź swój klucz API">
+    </div>
+    
+    <button type="submit">Zapisz ustawienia</button>
+  </form>
+  
+  <div id="status" class="status"></div>
+  
+  <div class="features">
+    <h3>Funkcje:</h3>
+    <ul>
+      <li>Ratingi IMDb i Rotten Tomatoes</li>
+      <li>Plakaty filmów</li>
+      <li>Informacje o gatunku</li>
+      <li>Krótki opis fabuły</li>
+      <li>Działa na Netflix, HBO, YouTube i innych</li>
+      <li>Szybkie cache'owanie wyników</li>
+    </ul>
+  </div>
+
+  <script>
+    // Ładuj zapisane ustawienia
+    chrome.storage.sync.get(['omdbApiKey'], (result) => {
+      if (result.omdbApiKey) {
+        document.getElementById('apiKey').value = result.omdbApiKey;
+      }
+    });
+
+    // Obsługa formularza
+    document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const apiKey = document.getElementById('apiKey').value.trim();
+      const statusEl = document.getElementById('status');
+      
+      if (!apiKey) {
+        showStatus('Wprowadź klucz API!', 'error');
+        return;
+      }
+      
+      // Testuj klucz API przed zapisaniem
+      showStatus('Sprawdzanie klucza API...', 'info');
+      
+      try {
+        const testResponse = await fetch(`https://www.omdbapi.com/?t=Inception&apikey=${apiKey}`);
+        const testData = await testResponse.json();
+        
+        if (testData.Response === 'True') {
+          // Klucz jest poprawny - zapisz go
+          chrome.storage.sync.set({ omdbApiKey: apiKey }, () => {
+            showStatus('Klucz API zapisany pomyślnie!', 'success');
+            
+            // Powiadom wszystkie otwarte karty
+            chrome.tabs.query({}, (tabs) => {
+              tabs.forEach(tab => {
+                chrome.tabs.sendMessage(tab.id, {
+                  action: 'apiKeyUpdated',
+                  apiKey: apiKey
+                }).catch(() => {
+                  // Ignoruj błąd dla kart bez content script
+                });
+              });
+            });
+          });
+        } else {
+          showStatus(`Błąd: ${testData.Error || 'Nieprawidłowy klucz API'}`, 'error');
+        }
+      } catch (error) {
+        showStatus('Błąd połączenia. Sprawdź internet i spróbuj ponownie.', 'error');
+        console.error('Błąd testowania API:', error);
+      }
+    });
+
+    function showStatus(message, type) {
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = message;
+      statusEl.className = `status ${type}`;
+      statusEl.style.display = 'block';
+      
+      if (type !== 'info') {
+        setTimeout(() => {
+          statusEl.style.display = 'none';
+        }, 4000);
+      }
+    }
+  </script>
+</body>
+</html>

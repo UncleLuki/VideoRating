@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Movie Ratings Tooltip",
+  "version": "1.0",
+  "description": "Pokazuje ratingi z IMDb i Rotten Tomatoes po najechaniu na filmy/seriale",
+  
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  
+  "host_permissions": [
+    "http://www.omdbapi.com/*",
+    "https://www.omdbapi.com/*"
+  ],
+  
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*/*"
+      ],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ],
+  
+  "background": {
+    "service_worker": "background.js"
+  },
+  
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Movie Ratings Tooltip"
+  },
+  
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
