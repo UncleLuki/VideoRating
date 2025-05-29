@@ -104,6 +104,11 @@ class MovieRatingsTooltip {
       '.title-card',
       '.slider-item',
       '.title-card-container',
+      // New selectors for Netflix expanded preview
+      '.previewModal--player-titleArea h1',
+      '[data-uia="previewModal-title"]',
+      '.bob-title',
+      '.title.episode-title',
       
       // HBO Max
       '.content-tile',
